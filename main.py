@@ -3,9 +3,11 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 
+# Import parsed data
 df = pd.read_csv("companys_data.csv")
 print(df.columns)
 
+# Removing outliers
 df = df[df['Company name'] != 'Детский Мир']
 df = df[df['Company name'] != 'Белон']
 df = df[df['Company name'] != 'ТНС энерго Нижний Новгород']
@@ -21,11 +23,11 @@ df = df[df['Company name'] != 'ЦИАН']
 
 # Calculating P/E column
 df['P/E'] = df['Price'] / df['EPS']
-df['P/E'] = df['P/E'].replace([pd.NaT, np.inf, -np.inf], 0)
+df['P/E'] = df['P/E'].replace([pd.NaT, np.inf, -np.inf], 0)  # Filling space for
 
 # Calculating P/S column
 df['P/S'] = df['capital'] / df['revenue']
-df['P/S'] = df['P/S'].replace([np.nan, np.inf, -np.inf], 0)
+df['P/S'] = df['P/S'].replace([np.nan, np.inf, -np.inf], 0)  # Filling space for
 
 # Calculating Graham coefficient
 df["grahamCoef"] = df["Price"] / ((df["Assets"] - df["Debt"]) / (df["Shares"])) / 10
@@ -36,14 +38,14 @@ print(df)
 pe_filtered = df[df['P/E'] < 15]
 pe_filtered_sorted = pe_filtered.sort_values('P/E', ascending=True)
 pe_filtered_values = pe_filtered_sorted[['Company name', 'P/E']]
-print("\n\nValues less than 15 in P/E column (sorted in ascending order):")
+print("\n\nValues less than 15 in P/E column:")
 print(pe_filtered_values.head(30))
 
 # Filter and print values less than 1 in the "P/S" column
 ps_filtered = df[df['P/S'] < 1]
 ps_filtered_sorted = ps_filtered.sort_values('P/S', ascending=True)
 ps_filtered_values = ps_filtered_sorted[['Company name', 'P/S']]
-print("\n\nValues less than 1.5 in P/S column (sorted in ascending order):")
+print("\n\nValues less than 1 in P/S column:")
 print(ps_filtered_values.head(30))
 
 # Sort and print top 30 values from the "ROE" column
@@ -52,7 +54,7 @@ top_30_roe = roe_sorted[['Company name', 'ROE']].head(30)
 print("\n\nTop 30 values from ROE column:")
 print(top_30_roe)
 
-# Filter and print values from the "grahamCoef" column that are between 40 and 70
+# Filter and print values from the "grahamCoef" column that are between 50 and 70
 graham_filtered = df[(df['grahamCoef'] > 50) & (df['grahamCoef'] < 70)]
 graham_filtered_values = graham_filtered[['Company name', 'grahamCoef']].head(30)
 print("\n\nValues from grahamCoef column between 50 and 70:")
@@ -64,17 +66,17 @@ ps_set = set(ps_filtered_values['Company name'].head(30))
 roe_set = set(top_30_roe['Company name'])
 graham_set = set(graham_filtered_values['Company name'])
 
-# Find intersections
-intersectionn = (pe_set & ps_set) | (pe_set & roe_set) | (pe_set & graham_set) | (ps_set & roe_set) | (
-            ps_set & graham_set) | (roe_set & graham_set)
+# Find intersections in sets
+intersections = (pe_set & ps_set) | (pe_set & roe_set) | (pe_set & graham_set) | (ps_set & roe_set) | (
+        ps_set & graham_set) | (roe_set & graham_set)
 
 # intersection = (pe_set & ps_set & roe_set) | (pe_set & ps_set & graham_set) | (ps_set & graham_set & roe_set) | (
-# pe_set & graham_set & roe_set)
+# pe_set & graham_set & roe_set) That was an attempt to see the intersections of three.
 print("\nIntersections:")
-for element in intersectionn:
+for element in intersections:
     print(element)
 
-random_values = np.random.choice(list(intersectionn), size=10, replace=False)
+random_values = np.random.choice(list(intersections), size=10, replace=False)
 
 # Find the selected values in the 'Company name' column
 selected_rows = df[df['Company name'].isin(random_values)]
@@ -137,7 +139,7 @@ fig_graham.add_trace(
     go.Bar(
         x=selected_rows['Company name'],
         y=selected_rows['grahamCoef'],
-        marker=dict(color=['blue' if (val <= 70 and val >= 50) else 'red' for val in selected_rows['grahamCoef']]),
+        marker=dict(color=['blue' if (70 >= val >= 50) else 'red' for val in selected_rows['grahamCoef']]),
         opacity=0.6,
         name='grahamCoef'
     )
@@ -180,31 +182,15 @@ graham_diff_min = df['Graham Difference'].min()
 graham_diff_max = df['Graham Difference'].max()
 df['Graham Coefficient'] = ((df['Graham Difference'] - graham_diff_min) / (graham_diff_max - graham_diff_min)) * 100
 
+# Calculating our coefficient
 df['Main Coefficient'] = df['ROECoef'] - df['PSCoef'] - df['PECoef'] - df['Graham Coefficient']
-print(df)
 
 main_sorted = df.sort_values('Main Coefficient', ascending=False)
 top_30_main = main_sorted[['Company name', 'Main Coefficient']].head(30)
-main_set = set(top_30_main['Company name'].head(30))
+main_set = set(top_30_main['Company name'])
 
 print("\n\nTop 30 intersection values from Main Coefficient column:")
-for elem in main_set.intersection(intersectionn):
-    print(elem)
-
-main_sorted = df.sort_values('Main Coefficient', ascending=False)
-top_20_main = main_sorted[['Company name', 'Main Coefficient']].head(20)
-main_set = set(top_30_main['Company name'].head(20))
-
-print("\n\nTop 20 intersection values from Main Coefficient column:")
-for elem in main_set.intersection(intersectionn):
-    print(elem)
-
-main_sorted = df.sort_values('Main Coefficient', ascending=False)
-top_30_main = main_sorted[['Company name', 'Main Coefficient']].head(10)
-main_set = set(top_30_main['Company name'].head(10))
-
-print("\n\nTop 10 intersection values from Main Coefficient column:")
-for elem in main_set.intersection(intersectionn):
+for elem in main_set.intersection(intersections):
     print(elem)
 
 print("\n\nTop 30 values from Main Coefficient column:")
@@ -343,7 +329,7 @@ fig_grahame.add_trace(
         y=random_samples['grahamCoef'][mask_graham],
         marker=dict(color='blue'),
         opacity=0.6,
-        name='grahamCoef (50-70)'
+        name='Graham (50-70)'
     )
 )
 fig_grahame.add_trace(
@@ -352,19 +338,18 @@ fig_grahame.add_trace(
         y=random_samples['grahamCoef'][~mask_graham],
         marker=dict(color='red'),
         opacity=0.6,
-        name='grahamCoef (not 50-70)'
+        name='Graham (not 50-70)'
     )
 )
 
 # Update the layout
 fig_grahame.update_layout(
-    title='Histogram of grahamCoef',
+    title='Histogram of Graham Coefficient',
     xaxis_title='Company name',
     yaxis_title='Graham Coefficient'
 )
 
 # Display the histograms
-'''
 fig_pc.show()
 fig_ps.show()
 fig_pe.show()
@@ -373,14 +358,14 @@ fig_roe.show()
 fig_roee.show()
 fig_graham.show()
 fig_grahame.show()
-'''
+
 
 # Тут начинается вторая часть нашего исследования. Принтим графики для 5 необходимых нам компаний
 dFive = pd.read_csv("FIVE.csv")
 # Create graph 1
 Fgraph1 = go.Scatter(
     x=dFive['Datetime'],  # Data from the "Datetime" column
-    y=dFive['med'],       # Data from the "med" column
+    y=dFive['med'],  # Data from the "med" column
     mode='lines',
     name='med'
 )
@@ -388,14 +373,14 @@ Fgraph1 = go.Scatter(
 # Create graph 2
 Fgraph2_1 = go.Scatter(
     x=dFive['Datetime'],  # Data from the "Datetime" column
-    y=dFive['K'],         # Data from the "K" column
+    y=dFive['K'],  # Data from the "K" column
     mode='lines',
     name='K'
 )
 
 Fgraph2_2 = go.Scatter(
     x=dFive['Datetime'],  # Data from the "Datetime" column
-    y=dFive['D'],         # Data from the "D" column
+    y=dFive['D'],  # Data from the "D" column
     mode='lines',
     name='D'
 )
@@ -433,7 +418,7 @@ figFiveKD.show()
 dKrsb = pd.read_csv("KRSB.csv")
 Kgraph1 = go.Scatter(
     x=dKrsb['Datetime'],  # Data from the "Datetime" column
-    y=dKrsb['med2'],       # Data from the "med" column
+    y=dKrsb['med2'],  # Data from the "med" column
     mode='lines',
     name='med'
 )
@@ -441,14 +426,14 @@ Kgraph1 = go.Scatter(
 # Create graph 2
 Kgraph2_1 = go.Scatter(
     x=dKrsb['Datetime'],  # Data from the "Datetime" column
-    y=dKrsb['K'],         # Data from the "K" column
+    y=dKrsb['K'],  # Data from the "K" column
     mode='lines',
     name='K'
 )
 
 Kgraph2_2 = go.Scatter(
     x=dKrsb['Datetime'],  # Data from the "Datetime" column
-    y=dKrsb['D2'],         # Data from the "D" column
+    y=dKrsb['D2'],  # Data from the "D" column
     mode='lines',
     name='D'
 )
@@ -482,11 +467,10 @@ figKrsbMid.update_layout(
 figKrsbMid.show()
 figKrsbKD.show()
 
-
 dMrks = pd.read_csv("MRKS.csv")
 Mgraph1 = go.Scatter(
     x=dMrks['Datetime'],  # Data from the "Datetime" column
-    y=dMrks['med'],       # Data from the "med" column
+    y=dMrks['med'],  # Data from the "med" column
     mode='lines',
     name='med'
 )
@@ -494,14 +478,14 @@ Mgraph1 = go.Scatter(
 # Create graph 2
 Mgraph2_1 = go.Scatter(
     x=dMrks['Datetime'],  # Data from the "Datetime" column
-    y=dMrks['K'],         # Data from the "K" column
+    y=dMrks['K'],  # Data from the "K" column
     mode='lines',
     name='K'
 )
 
 Mgraph2_2 = go.Scatter(
     x=dMrks['Datetime'],  # Data from the "Datetime" column
-    y=dMrks['D'],         # Data from the "D" column
+    y=dMrks['D'],  # Data from the "D" column
     mode='lines',
     name='D'
 )
@@ -535,11 +519,10 @@ figMrksMid.update_layout(
 figMrksMid.show()
 figMrksKD.show()
 
-
 dPmsb = pd.read_csv("PMSB.csv")
 Pgraph1 = go.Scatter(
     x=dPmsb['Datetime'],  # Data from the "Datetime" column
-    y=dPmsb['med'],       # Data from the "med" column
+    y=dPmsb['med'],  # Data from the "med" column
     mode='lines',
     name='med'
 )
@@ -547,14 +530,14 @@ Pgraph1 = go.Scatter(
 # Create graph 2
 Pgraph2_1 = go.Scatter(
     x=dPmsb['Datetime'],  # Data from the "Datetime" column
-    y=dPmsb['K'],         # Data from the "K" column
+    y=dPmsb['K'],  # Data from the "K" column
     mode='lines',
     name='K'
 )
 
 Pgraph2_2 = go.Scatter(
     x=dPmsb['Datetime'],  # Data from the "Datetime" column
-    y=dPmsb['D'],         # Data from the "D" column
+    y=dPmsb['D'],  # Data from the "D" column
     mode='lines',
     name='D'
 )
@@ -588,12 +571,10 @@ figPmsbMid.update_layout(
 figPmsbMid.show()
 figPmsbKD.show()
 
-
-
 dRkke = pd.read_csv("RKKE.csv")
 Rgraph1 = go.Scatter(
     x=dRkke['Datetime'],  # Data from the "Datetime" column
-    y=dRkke['med'],       # Data from the "med" column
+    y=dRkke['med'],  # Data from the "med" column
     mode='lines',
     name='med'
 )
@@ -601,14 +582,14 @@ Rgraph1 = go.Scatter(
 # Create graph 2
 Rgraph2_1 = go.Scatter(
     x=dRkke['Datetime'],  # Data from the "Datetime" column
-    y=dRkke['K'],         # Data from the "K" column
+    y=dRkke['K'],  # Data from the "K" column
     mode='lines',
     name='K'
 )
 
 Rgraph2_2 = go.Scatter(
     x=dRkke['Datetime'],  # Data from the "Datetime" column
-    y=dRkke['D'],         # Data from the "D" column
+    y=dRkke['D'],  # Data from the "D" column
     mode='lines',
     name='D'
 )
