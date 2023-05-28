@@ -3,6 +3,13 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 
+KD_printer = True
+TOP10_printer = False
+DIST_printer = False
+Intersections_printer = False
+Intersections_printer_2 = False
+Main_printer = False
+
 # Import parsed data
 df = pd.read_csv("companys_data.csv")
 print(df.columns)
@@ -40,6 +47,8 @@ pe_filtered_sorted = pe_filtered.sort_values('P/E', ascending=True)
 pe_filtered_values = pe_filtered_sorted[['Company name', 'P/E']]
 print("\n\nValues less than 15 in P/E column:")
 print(pe_filtered_values.head(30))
+fig_pe = px.histogram(pe_filtered_values.head(10), x='Company name', y='P/E', title='Top 10 P/E values')
+fig_pe.update_layout(xaxis_title='Company name', yaxis_title='Value')
 
 # Filter and print values less than 1 in the "P/S" column
 ps_filtered = df[df['P/S'] < 1]
@@ -47,24 +56,77 @@ ps_filtered_sorted = ps_filtered.sort_values('P/S', ascending=True)
 ps_filtered_values = ps_filtered_sorted[['Company name', 'P/S']]
 print("\n\nValues less than 1 in P/S column:")
 print(ps_filtered_values.head(30))
+fig_ps = px.histogram(ps_filtered_values.head(10), x='Company name', y='P/S', title='Top 10 P/S values')
+fig_ps.update_layout(xaxis_title='Company name', yaxis_title='Value')
 
 # Sort and print top 30 values from the "ROE" column
 roe_sorted = df.sort_values('ROE', ascending=False)
 top_30_roe = roe_sorted[['Company name', 'ROE']].head(30)
 print("\n\nTop 30 values from ROE column:")
 print(top_30_roe)
+fig_roe = px.histogram(top_30_roe.head(10), x='Company name', y='ROE', title='Top 10 ROE values')
+fig_roe.update_layout(xaxis_title='Company name', yaxis_title='Value')
 
 # Filter and print values from the "grahamCoef" column that are between 50 and 70
 graham_filtered = df[(df['grahamCoef'] > 50) & (df['grahamCoef'] < 70)]
 graham_filtered_values = graham_filtered[['Company name', 'grahamCoef']].head(30)
 print("\n\nValues from grahamCoef column between 50 and 70:")
 print(graham_filtered_values)
+fig_graham_coef = px.histogram(graham_filtered_values.sample(10), x='Company name', y='grahamCoef', title='10 Graham Coefficient 50 ≤ values ≤ 70')
+fig_graham_coef.update_layout(xaxis_title='Company name', yaxis_title='Value')
 
 # Extract top 30 values into sets
 pe_set = set(pe_filtered_values['Company name'].head(30))
 ps_set = set(ps_filtered_values['Company name'].head(30))
 roe_set = set(top_30_roe['Company name'])
 graham_set = set(graham_filtered_values['Company name'])
+
+# Display the histograms
+if(TOP10_printer):
+    fig_ps.show()
+    fig_pe.show()
+    fig_roe.show()
+    fig_graham_coef.show()
+
+# Peeking values from 'P/S', 'P/E', 'ROE', and 'grahamCoef' columns
+ps_values = df['P/S']
+pe_values = df['P/E']
+roe_values = df['ROE']
+graham_coef_values = df['grahamCoef']
+
+# Setting the step size for the histogram (change as desired)
+stepPS = 0.05
+stepPE = 0.5
+stepROE = 5
+stepGR = 5
+
+# Setting the range and step size for the histogram (change as desired)
+range_ps = (-3, 2)  # Example range for P/S column
+range_pe = (-11, 23)    # Example range for P/E column
+range_roe = (-50, 120) # Example range for ROE column
+range_graham_coef = (0, 100)  # Example range for grahamCoef column
+fig_ps = go.Figure()
+fig_ps.add_trace(go.Histogram(x=ps_values, xbins=dict(start=range_ps[0], end=range_ps[1], size=stepPS), name='Companies'))
+fig_ps.update_layout(title='P/S Values Histogram', xaxis_title='Value', yaxis_title='Quantity')
+
+fig_pe = go.Figure()
+fig_pe.add_trace(go.Histogram(x=pe_values, xbins=dict(start=range_pe[0], end=range_pe[1], size=stepPE), name='Companies'))
+fig_pe.update_layout(title='P/E Values Histogram', xaxis_title='Value', yaxis_title='Quantity')
+
+fig_roe = go.Figure()
+fig_roe.add_trace(go.Histogram(x=roe_values, xbins=dict(start=range_roe[0], end=range_roe[1], size=stepROE), name='Companies'))
+fig_roe.update_layout(title='ROE Values Histogram', xaxis_title='Value', yaxis_title='Quantity')
+
+fig_graham_coef = go.Figure()
+fig_graham_coef.add_trace(go.Histogram(x=graham_coef_values, xbins=dict(start=range_graham_coef[0], end=range_graham_coef[1], size=stepGR), histnorm='percent', name='Companies'))
+fig_graham_coef.update_layout(title='Graham Coefficient Values Histogram', xaxis_title='Value', yaxis_title='Quantity')
+
+# Displaying the line graphs
+if DIST_printer:
+    fig_ps.show()
+    fig_pe.show()
+    fig_roe.show()
+    fig_graham_coef.show()
 
 # Find intersections in sets
 intersections = (pe_set & ps_set) | (pe_set & roe_set) | (pe_set & graham_set) | (ps_set & roe_set) | (
@@ -95,7 +157,7 @@ fig_ps.add_trace(
 fig_ps.update_layout(
     title='Histogram of P/S',
     xaxis_title='Company name',
-    yaxis_title='P/S'
+    yaxis_title='Value'
 )
 
 # Create the figure for P/E
@@ -112,7 +174,7 @@ fig_pe.add_trace(
 fig_pe.update_layout(
     title='Histogram of P/E',
     xaxis_title='Company name',
-    yaxis_title='P/E'
+    yaxis_title='Value'
 )
 
 # Create the figure for ROE
@@ -130,7 +192,7 @@ fig_roe.add_trace(
 fig_roe.update_layout(
     title='Histogram of ROE',
     xaxis_title='Company name',
-    yaxis_title='ROE'
+    yaxis_title='Value'
 )
 
 # Create the figure for grahamCoef
@@ -141,20 +203,22 @@ fig_graham.add_trace(
         y=selected_rows['grahamCoef'],
         marker=dict(color=['blue' if (70 >= val >= 50) else 'red' for val in selected_rows['grahamCoef']]),
         opacity=0.6,
-        name='grahamCoef'
+        name='Graham Coefficient'
     )
 )
 fig_graham.update_layout(
     title='Histogram of Graham Coefficient',
     xaxis_title='Company name',
-    yaxis_title='Graham Coefficient'
+    yaxis_title='Value'
 )
 
 # Display the histograms
-fig_ps.show()
-fig_pe.show()
-fig_roe.show()
-fig_graham.show()
+if Intersections_printer:
+    fig_pe.show()
+    fig_ps.show()
+    fig_roe.show()
+    fig_graham.show()
+
 
 # Get min and max values from 'P/S', 'P/E', and 'ROE' columns
 ps_min = df['P/S'].min()
@@ -185,8 +249,50 @@ df['Graham Coefficient'] = ((df['Graham Difference'] - graham_diff_min) / (graha
 # Calculating our coefficient
 df['Main Coefficient'] = df['ROECoef'] - df['PSCoef'] - df['PECoef'] - df['Graham Coefficient']
 
+selected_rows = df[df['Company name'].isin(random_values)]
+
+fig_main = go.Figure()
+fig_main.add_trace(
+    go.Bar(
+        x=selected_rows['Company name'],
+        y=selected_rows['Main Coefficient'],
+        marker=dict(color=selected_rows['Main Coefficient'], colorscale=colorscale, showscale=True),
+        opacity=0.6,
+        name='Main Coefficient'
+    )
+)
+fig_main.update_layout(
+    title='Histogram of Main Coefficient',
+    xaxis_title='Company name',
+    yaxis_title='Value'
+)
+
+if Main_printer:
+    fig_main.show()
+
 main_sorted = df.sort_values('Main Coefficient', ascending=False)
 top_30_main = main_sorted[['Company name', 'Main Coefficient']].head(30)
+top_10_main = main_sorted[['Company name', 'Main Coefficient']].head(10)
+
+fig_main = go.Figure()
+fig_main.add_trace(
+    go.Bar(
+        x=top_10_main['Company name'],
+        y=top_10_main['Main Coefficient'],
+        marker=dict(color=top_10_main['Main Coefficient'], colorscale=colorscale, showscale=True),
+        opacity=0.6,
+        name='Main Coefficient'
+    )
+)
+fig_main.update_layout(
+    title='Top 10 Main Coefficient values',
+    xaxis_title='Company name',
+    yaxis_title='Value'
+)
+
+if Main_printer:
+    fig_main.show()
+
 main_set = set(top_30_main['Company name'])
 
 print("\n\nTop 30 intersection values from Main Coefficient column:")
@@ -287,7 +393,6 @@ fig_pee.update_layout(
     yaxis_title='P/E'
 )
 
-# Create the figure for ROE
 # Define the colors for the gradient (blue to red)
 colorscale = [[0, 'red'], [1, 'blue']]
 
@@ -350,14 +455,15 @@ fig_grahame.update_layout(
 )
 
 # Display the histograms
-fig_pc.show()
-fig_ps.show()
-fig_pe.show()
-fig_pee.show()
-fig_roe.show()
-fig_roee.show()
-fig_graham.show()
-fig_grahame.show()
+if Intersections_printer_2:
+    fig_pc.show()
+    fig_ps.show()
+    fig_pe.show()
+    fig_pee.show()
+    fig_roe.show()
+    fig_roee.show()
+    fig_graham.show()
+    fig_grahame.show()
 
 
 # Тут начинается вторая часть нашего исследования. Принтим графики для 5 необходимых нам компаний
@@ -411,8 +517,9 @@ figFiveMid.update_layout(
 )
 
 # Show the plot
-figFiveMid.show()
-figFiveKD.show()
+if KD_printer:
+    figFiveMid.show()
+    figFiveKD.show()
 
 # Create graph 1
 dKrsb = pd.read_csv("KRSB.csv")
@@ -464,8 +571,9 @@ figKrsbMid.update_layout(
 )
 
 # Show the plot
-figKrsbMid.show()
-figKrsbKD.show()
+if KD_printer:
+    figKrsbMid.show()
+    figKrsbKD.show()
 
 dMrks = pd.read_csv("MRKS.csv")
 Mgraph1 = go.Scatter(
@@ -516,8 +624,9 @@ figMrksMid.update_layout(
 )
 
 # Show the plot
-figMrksMid.show()
-figMrksKD.show()
+if KD_printer:
+    figMrksMid.show()
+    figMrksKD.show()
 
 dPmsb = pd.read_csv("PMSB.csv")
 Pgraph1 = go.Scatter(
@@ -568,8 +677,9 @@ figPmsbMid.update_layout(
 )
 
 # Show the plot
-figPmsbMid.show()
-figPmsbKD.show()
+if KD_printer:
+    figPmsbMid.show()
+    figPmsbKD.show()
 
 dRkke = pd.read_csv("RKKE.csv")
 Rgraph1 = go.Scatter(
@@ -602,7 +712,7 @@ figRkkeKD.add_trace(Rgraph2_2)
 
 # Set the layout for the subplot
 figRkkeKD.update_layout(
-    title='PMSB',
+    title='RKKE',
     xaxis=dict(title='Date & Time'),
     yaxis=dict(title='Value'),
     legend=dict(x=0, y=1, traceorder='normal'),
@@ -611,7 +721,7 @@ figRkkeKD.update_layout(
 )
 
 figRkkeMid.update_layout(
-    title='PMSB',
+    title='RKKE',
     xaxis=dict(title='Date & Time'),
     yaxis=dict(title='Value'),
     legend=dict(x=0, y=1, traceorder='normal'),
@@ -620,5 +730,6 @@ figRkkeMid.update_layout(
 )
 
 # Show the plot
-figRkkeMid.show()
-figRkkeKD.show()
+if KD_printer:
+    figRkkeMid.show()
+    figRkkeKD.show()
