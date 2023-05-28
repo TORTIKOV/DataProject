@@ -82,7 +82,7 @@ roe_set = set(top_30_roe['Company name'])
 graham_set = set(graham_filtered_values['Company name'])
 
 # Display the histograms
-if(TOP10_printer):
+if TOP10_printer:
     fig_ps.show()
     fig_pe.show()
     fig_roe.show()
@@ -127,6 +127,167 @@ if DIST_printer:
     fig_pe.show()
     fig_roe.show()
     fig_graham_coef.show()
+
+sample = df[(df['grahamCoef'].abs() < 120) & (df['ROE'] > -100) & (df['P/S'] != 0)]
+# Select 20 random samples
+random_samples = sample.sample(n=20)
+
+# Plot histogram for 'P/C'
+fig_pc = px.histogram(random_samples, x='Company name', title='Histogram of P/S', y='P/S')
+fig_pc.update_xaxes(title='Companies name')
+fig_pc.update_yaxes(title='P/S')
+
+# Create a mask to identify values under 1
+mask = random_samples['P/S'] < 1
+
+# Create the figure
+fig_ps = go.Figure()
+
+# Add bars for values under 1
+fig_ps.add_trace(
+    go.Bar(
+        x=random_samples['Company name'][mask],
+        y=random_samples['P/S'][mask],
+        marker=dict(color='blue'),
+        opacity=0.6,
+        name='P/S < 1'
+    )
+)
+
+# Add bars for values 1 and above
+fig_ps.add_trace(
+    go.Bar(
+        x=random_samples['Company name'][~mask],
+        y=random_samples['P/S'][~mask],
+        marker=dict(color='red'),
+        opacity=0.6,
+        name='P/S >= 1'
+    )
+)
+
+# Update the layout
+fig_ps.update_layout(
+    title='Histogram of P/S',
+    xaxis_title='Company name',
+    yaxis_title='P/S'
+)
+
+# Plot histogram for 'P/E'
+fig_pe = px.histogram(random_samples, x='Company name', title='Histogram of P/E', y='P/E')
+fig_pe.update_xaxes(title='Companies name')
+fig_pe.update_yaxes(title='P/E')
+
+# Plot histogram for 'ROE'
+fig_roe = px.histogram(random_samples, x='Company name', title='Histogram of ROE', y='ROE')
+fig_roe.update_xaxes(title='Companies name')
+fig_roe.update_yaxes(title='ROE')
+
+# Plot histogram for 'grahamCoef'
+fig_graham = px.histogram(random_samples, x='Company name', title='Histogram of Graham Coefficient', y='grahamCoef')
+fig_graham.update_xaxes(title='Companies name')
+fig_graham.update_yaxes(title='Graham Coefficient')
+
+# Create masks to identify values under 1
+mask_pe = random_samples['P/E'] < 15
+
+# Create the figure for P/E
+fig_pee = go.Figure()
+fig_pee.add_trace(
+    go.Bar(
+        x=random_samples['Company name'][mask_pe],
+        y=random_samples['P/E'][mask_pe],
+        marker=dict(color='blue'),
+        opacity=0.6,
+        name='P/E < 15'
+    )
+)
+fig_pee.add_trace(
+    go.Bar(
+        x=random_samples['Company name'][~mask_pe],
+        y=random_samples['P/E'][~mask_pe],
+        marker=dict(color='red'),
+        opacity=0.6,
+        name='P/E >= 15'
+    )
+)
+
+fig_pee.update_layout(
+    title='Histogram of P/E',
+    xaxis_title='Company name',
+    yaxis_title='P/E'
+)
+
+# Define the colors for the gradient (blue to red)
+colorscale = [[0, 'red'], [1, 'blue']]
+
+# Create the figure for ROE
+fig_roee = go.Figure()
+
+# Add bars with the gradient color
+fig_roee.add_trace(
+    go.Bar(
+        x=random_samples['Company name'],
+        y=random_samples['ROE'],
+        marker=dict(
+            color=random_samples['ROE'],
+            colorscale=colorscale,
+            showscale=True
+        ),
+        opacity=0.6,
+        name='ROE'
+    )
+)
+
+# Update the layout
+fig_roee.update_layout(
+    title='Histogram of ROE',
+    xaxis_title='Company name',
+    yaxis_title='ROE'
+)
+
+# Create a mask to identify values within the range [50, 70]
+mask_graham = (random_samples['grahamCoef'] >= 50) & (random_samples['grahamCoef'] <= 70)
+
+# Create the figure for grahamCoef
+fig_grahame = go.Figure()
+
+# Add bars with the specified colors based on the mask
+fig_grahame.add_trace(
+    go.Bar(
+        x=random_samples['Company name'][mask_graham],
+        y=random_samples['grahamCoef'][mask_graham],
+        marker=dict(color='blue'),
+        opacity=0.6,
+        name='Graham (50-70)'
+    )
+)
+fig_grahame.add_trace(
+    go.Bar(
+        x=random_samples['Company name'][~mask_graham],
+        y=random_samples['grahamCoef'][~mask_graham],
+        marker=dict(color='red'),
+        opacity=0.6,
+        name='Graham (not 50-70)'
+    )
+)
+
+# Update the layout
+fig_grahame.update_layout(
+    title='Histogram of Graham Coefficient',
+    xaxis_title='Company name',
+    yaxis_title='Graham Coefficient'
+)
+
+# Display the histograms of random
+if Intersections_printer_2:
+    fig_pc.show()
+    fig_ps.show()
+    fig_pe.show()
+    fig_pee.show()
+    fig_roe.show()
+    fig_roee.show()
+    fig_graham.show()
+    fig_grahame.show()
 
 # Find intersections in sets
 intersections = (pe_set & ps_set) | (pe_set & roe_set) | (pe_set & graham_set) | (ps_set & roe_set) | (
@@ -303,168 +464,6 @@ print("\n\nTop 30 values from Main Coefficient column:")
 print(top_30_main)
 
 df.to_csv('Companies_data_out.csv', index=False)
-
-sample = df[(df['grahamCoef'].abs() < 120) & (df['ROE'] > -100) & (df['P/S'] != 0)]
-# Select 20 random samples
-random_samples = sample.sample(n=20)
-
-# Plot histogram for 'P/C'
-fig_pc = px.histogram(random_samples, x='Company name', title='Histogram of P/C', y='P/S')
-fig_pc.update_xaxes(title='Companies name')
-fig_pc.update_yaxes(title='P/S')
-
-# Create a mask to identify values under 1
-mask = random_samples['P/S'] < 1
-
-# Create the figure
-fig_ps = go.Figure()
-
-# Add bars for values under 1
-fig_ps.add_trace(
-    go.Bar(
-        x=random_samples['Company name'][mask],
-        y=random_samples['P/S'][mask],
-        marker=dict(color='blue'),
-        opacity=0.6,
-        name='P/S < 1'
-    )
-)
-
-# Add bars for values 1 and above
-fig_ps.add_trace(
-    go.Bar(
-        x=random_samples['Company name'][~mask],
-        y=random_samples['P/S'][~mask],
-        marker=dict(color='red'),
-        opacity=0.6,
-        name='P/S >= 1'
-    )
-)
-
-# Update the layout
-fig_ps.update_layout(
-    title='Histogram of P/S',
-    xaxis_title='Company name',
-    yaxis_title='P/S'
-)
-
-# Plot histogram for 'P/E'
-fig_pe = px.histogram(random_samples, x='Company name', title='Histogram of P/E', y='P/E')
-fig_pe.update_xaxes(title='Companies name')
-fig_pe.update_yaxes(title='P/E')
-
-# Plot histogram for 'ROE'
-fig_roe = px.histogram(random_samples, x='Company name', title='Histogram of ROE', y='ROE')
-fig_roe.update_xaxes(title='Companies name')
-fig_roe.update_yaxes(title='ROE')
-
-# Plot histogram for 'grahamCoef'
-fig_graham = px.histogram(random_samples, x='Company name', title='Histogram of Graham Coefficient', y='grahamCoef')
-fig_graham.update_xaxes(title='Companies name')
-fig_graham.update_yaxes(title='Graham Coefficient')
-
-# Create masks to identify values under 1
-mask_pe = random_samples['P/E'] < 15
-
-# Create the figure for P/E
-fig_pee = go.Figure()
-fig_pee.add_trace(
-    go.Bar(
-        x=random_samples['Company name'][mask_pe],
-        y=random_samples['P/E'][mask_pe],
-        marker=dict(color='blue'),
-        opacity=0.6,
-        name='P/E < 15'
-    )
-)
-fig_pee.add_trace(
-    go.Bar(
-        x=random_samples['Company name'][~mask_pe],
-        y=random_samples['P/E'][~mask_pe],
-        marker=dict(color='red'),
-        opacity=0.6,
-        name='P/E >= 15'
-    )
-)
-
-fig_pee.update_layout(
-    title='Histogram of P/E',
-    xaxis_title='Company name',
-    yaxis_title='P/E'
-)
-
-# Define the colors for the gradient (blue to red)
-colorscale = [[0, 'red'], [1, 'blue']]
-
-# Create the figure for ROE
-fig_roee = go.Figure()
-
-# Add bars with the gradient color
-fig_roee.add_trace(
-    go.Bar(
-        x=random_samples['Company name'],
-        y=random_samples['ROE'],
-        marker=dict(
-            color=random_samples['ROE'],
-            colorscale=colorscale,
-            showscale=True
-        ),
-        opacity=0.6,
-        name='ROE'
-    )
-)
-
-# Update the layout
-fig_roee.update_layout(
-    title='Histogram of ROE',
-    xaxis_title='Company name',
-    yaxis_title='ROE'
-)
-
-# Create a mask to identify values within the range [50, 70]
-mask_graham = (random_samples['grahamCoef'] >= 50) & (random_samples['grahamCoef'] <= 70)
-
-# Create the figure for grahamCoef
-fig_grahame = go.Figure()
-
-# Add bars with the specified colors based on the mask
-fig_grahame.add_trace(
-    go.Bar(
-        x=random_samples['Company name'][mask_graham],
-        y=random_samples['grahamCoef'][mask_graham],
-        marker=dict(color='blue'),
-        opacity=0.6,
-        name='Graham (50-70)'
-    )
-)
-fig_grahame.add_trace(
-    go.Bar(
-        x=random_samples['Company name'][~mask_graham],
-        y=random_samples['grahamCoef'][~mask_graham],
-        marker=dict(color='red'),
-        opacity=0.6,
-        name='Graham (not 50-70)'
-    )
-)
-
-# Update the layout
-fig_grahame.update_layout(
-    title='Histogram of Graham Coefficient',
-    xaxis_title='Company name',
-    yaxis_title='Graham Coefficient'
-)
-
-# Display the histograms
-if Intersections_printer_2:
-    fig_pc.show()
-    fig_ps.show()
-    fig_pe.show()
-    fig_pee.show()
-    fig_roe.show()
-    fig_roee.show()
-    fig_graham.show()
-    fig_grahame.show()
-
 
 # Тут начинается вторая часть нашего исследования. Принтим графики для 5 необходимых нам компаний
 dFive = pd.read_csv("FIVE.csv")
