@@ -3,7 +3,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 
-KD_printer = True
+KD_printer = False
 TOP10_printer = False
 DIST_printer = False
 Intersections_printer = False
@@ -30,7 +30,7 @@ df = df[df['Company name'] != 'ЦИАН']
 
 # Calculating P/E column
 df['P/E'] = df['Price'] / df['EPS']
-df['P/E'] = df['P/E'].replace([pd.NaT, np.inf, -np.inf], 0)  # Filling space for
+df['P/E'] = df['P/E'].replace([np.nan, np.inf, -np.inf], 0)  # Filling space for
 
 # Calculating P/S column
 df['P/S'] = df['capital'] / df['revenue']
@@ -42,8 +42,7 @@ df["grahamCoef"] = df["Price"] / ((df["Assets"] - df["Debt"]) / (df["Shares"])) 
 print(df)
 
 # Filter and print values less than 15 in the "P/E" column
-pe_filtered = df[df['P/E'] < 15]
-pe_filtered_sorted = pe_filtered.sort_values('P/E', ascending=True)
+pe_filtered_sorted = df.sort_values('P/E', ascending=True)
 pe_filtered_values = pe_filtered_sorted[['Company name', 'P/E']]
 print("\n\nValues less than 15 in P/E column:")
 print(pe_filtered_values.head(30))
@@ -51,8 +50,7 @@ fig_pe = px.histogram(pe_filtered_values.head(10), x='Company name', y='P/E', ti
 fig_pe.update_layout(xaxis_title='Company name', yaxis_title='Value')
 
 # Filter and print values less than 1 in the "P/S" column
-ps_filtered = df[df['P/S'] < 1]
-ps_filtered_sorted = ps_filtered.sort_values('P/S', ascending=True)
+ps_filtered_sorted = df.sort_values('P/S', ascending=True)
 ps_filtered_values = ps_filtered_sorted[['Company name', 'P/S']]
 print("\n\nValues less than 1 in P/S column:")
 print(ps_filtered_values.head(30))
